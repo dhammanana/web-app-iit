@@ -1,5 +1,5 @@
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+// const path = require('path');
+// require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const connection = {
     host: process.env.DATABASE_HOST || 'localhost',
@@ -9,7 +9,6 @@ const connection = {
     port: process.env.DATABASE_PORT || 3306,
 };
 
-console.log("Connection:", connection);
 
 module.exports = {
     development: {

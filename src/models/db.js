@@ -2,8 +2,6 @@
 const knexConfig = require('../../knex/knexfile');
 const knex = require('knex')(knexConfig.development);
 
-console.log('Database path:', knexConfig.development.connection.filename);
-
 async function getMissions() {
     try {
         return await knex('Mission').select();
@@ -178,6 +176,7 @@ async function getAcademicProfiles() {
     }
 }
 
+
 async function getUserByUsername(username) {
     try {
         return await knex('User')
@@ -335,6 +334,16 @@ async function getAllImages() {
     }
 }
 
+async function getCarousel() {
+    try {
+        return await knex('Carousel').select();
+    } catch (error) {
+        const { logError } = await import('./logger');
+        await logError('Error fetching carousel data', error);
+        throw error;
+    }
+}
+
 module.exports = {
     knex, // Export knex instance if needed elsewhere
     getMissions,
@@ -362,4 +371,5 @@ module.exports = {
     deleteItem,
     getNewsAndEvents,
     getAllImages,
+    getCarousel,
 };

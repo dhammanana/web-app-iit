@@ -7,8 +7,9 @@ import MainLayoutSection from '../components/maincommonlayout/MainCommonLayoutSe
 import EducationComponent from '../components/education/EducationComponent';
 import Slider from '../components/slider/slider';
 import OurFocusCardComponent from '../components/ourFocusCardComponent/ourFocusCardComponent';
-import styles from '../components/aboutUsComponent/aboutUsComponent.module.css';
+import styles from '../styles/education.module.css';
 import React, { useRef } from 'react';
+import fs from 'fs/promises'; // For async file operations
 
 export default function Education({ dhammaLectures }) {
   // Create an array for card components to view in card slider
@@ -31,18 +32,18 @@ export default function Education({ dhammaLectures }) {
     }
   };
 
-  const { t, lang } = useTranslation();
+  const { t, lang } = useTranslation('education-page');
   const router = useRouter();
 
   return (
     <div className="skeleton">
       <Head>
-        <title>Education</title>
+        <title>{t('page_title')}</title>
         <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
           name="description"
-          content="international institute of theravada"
+          content={t('page_description')}
         />
       </Head>
 
@@ -51,8 +52,8 @@ export default function Education({ dhammaLectures }) {
       </div>
 
       <MainLayoutSection
-        title="Education"
-        description="Comprehensive studies of Buddhist scriptures pave the foundation for the prolongation of the Buddha Sāsana (dispensation)."
+        title={t('main_layout_title')}
+        description={t('main_layout_description')}
         photo="/EducationSangha.png"
         backgroundImg="url(/Ellipse-6.svg)"
       />
@@ -64,7 +65,7 @@ export default function Education({ dhammaLectures }) {
           <div className={styles.ourFocusInnerContainer}>
             <div className={styles.ourFocusHeader}></div>
             <div className={styles.ourFocusSubHeader}>
-              <div className={styles.subHeaderText}>Dhamma Lectures and Sermons</div>
+              <div className={styles.subHeaderText}>{t('dhamma_lectures_and_sermons')}</div>
               <div className={styles.sliderButtonContainer}>
                 <div className={styles.sliderButton} onClick={slideRight}>
                   <svg
@@ -110,17 +111,45 @@ export default function Education({ dhammaLectures }) {
 }
 
 export async function getServerSideProps(context) {
+  let dhammaLectures = [];
 
-  const response = await fetch(`${process.env.API_BASE_URL}/api/dhamma-lectures`);
-  if (!response.ok) {
-    console.error(`Failed to fetch dhamma lectures: ${response.status}`);
+  // Helper function to log errors to /tmp/error.log
+  const logError = async (message) => {
+    const timestamp = new Date().toISOString();
+    const logMessage = `${timestamp} - ${message}\n`;
+    try {
+      await fs.appendFile('/tmp/error.log', logMessage);
+    } catch (fsError) {
+      console.error(`Failed to write to /tmp/error.log: ${fsError.message}`);
+    }
+  };
+
+  try {
+    // Fetch Dhamma Lectures
+    const response = await fetch(`${process.env.API_BASE_URL}/api/dhamma-lectures`);
+    if (!response.ok) {
+      const errorMsg = `Failed to fetch dhamma lectures: ${response.status}`;
+      await logError(errorMsg);
+      console.error(errorMsg);
+      return {
+        props: {
+          dhammaLectures: [], // Return empty array on failure
+        },
+      };
+    }
+    dhammaLectures = (await response.json()).reverse();
+  } catch (error) {
+    // Catch unexpected errors (e.g., network issues, JSON parsing errors)
+    const errorMsg = `Unexpected error in getServerSideProps: ${error.message}`;
+    await logError(errorMsg);
+    console.error(errorMsg);
     return {
       props: {
         dhammaLectures: [], // Return empty array on failure
       },
     };
   }
-  const dhammaLectures = await response.json();
+
   return {
     props: {
       dhammaLectures,
